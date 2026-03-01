@@ -4,44 +4,41 @@ const { chromium } = require('playwright');
   const browser = await chromium.launch();
   const page = await browser.newPage();
   
-  // Replace these with the ACTUAL 10 URLs from your assignment
-  const urls = [
-    'https://example.com/seed1',
-    'https://example.com/seed2',
-    'https://example.com/seed3',
-    'https://example.com/seed4',
-    'https://example.com/seed5',
-    'https://example.com/seed6',
-    'https://example.com/seed7',
-    'https://example.com/seed8',
-    'https://example.com/seed9',
-    'https://example.com/seed10'
-  ];
-
   let totalSum = 0;
 
-  for (const url of urls) {
+  // This loop automatically counts from 1 to 10 for you
+  for (let i = 1; i <= 10; i++) {
+    const url = `https://sanand0.github.io/tdsdata/js_table/?seed=${i}`;
     console.log(`Visiting: ${url}`);
-    await page.goto(url, { waitUntil: 'networkidle' }); // Wait for the page to stop loading
-    
-    // This waits specifically for a table to appear on the screen
-    await page.waitForSelector('table'); 
 
-    const numbers = await page.$$eval('td', cells => 
-      cells.map(c => {
-        // This removes commas, dollar signs, or spaces before turning text into a number
-        const cleaned = c.innerText.replace(/[^\d.-]/g, '');
-        return parseFloat(cleaned);
-      }).filter(n => !isNaN(n))
-    );
-    
-    const pageSum = numbers.reduce((a, b) => a + b, 0);
-    totalSum += pageSum;
-    console.log(`Found on page: ${pageSum}`);
+    try {
+      // 1. Go to the page and wait for the network to be quiet
+      await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
+
+      // 2. Wait for the table to actually show up (since it's a JS table)
+      await page.waitForSelector('table', { timeout: 10000 });
+
+      // 3. Find all numbers in the table cells
+      const numbers = await page.$$eval('td', cells => 
+        cells.map(c => {
+          // Clean the text: remove anything that isn't a digit, dot, or minus sign
+          const cleaned = c.innerText.replace(/[^\d.-]/g, '');
+          return parseFloat(cleaned);
+        }).filter(n => !isNaN(n))
+      );
+      
+      const pageSum = numbers.reduce((a, b) => a + b, 0);
+      totalSum += pageSum;
+      console.log(`Seed ${i} Sum: ${pageSum}`);
+
+    } catch (err) {
+      console.log(`Could not read Seed ${i}: ${err.message}`);
+    }
   }
 
-  console.log('--- FINAL RESULT FOR 23f2004440@ds.study.iitm.ac.in ---');
-  console.log('TOTAL SUM IS:', totalSum);
+  console.log('--- FINAL SUBMISSION DATA ---');
+  console.log('Email: 23f2004440@ds.study.iitm.ac.in');
+  console.log('TOTAL_SUM:', totalSum);
 
   await browser.close();
 })();
